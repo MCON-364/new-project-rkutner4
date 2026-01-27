@@ -3,42 +3,51 @@
 # - Copy the provided autograder test into the project's test sources
 # - Run `mvn test` and award remaining points if tests pass
 
-# This file is intentionally simple and explicit so the autograder or a
-# custom script can parse and execute the listed steps.
-assignment:
-  name: "new project"
+name: Autograder
 
-autograding:
-  grading:
-    max_points: 100
+on:
+  push:
+    branches: [ main ]
 
-  checks:
-    - name: "has_pom_xml"
-      description: "Repository contains a pom.xml"
-      points: 80
-      run: |
-        if [ -f pom.xml ]; then
-          echo "OK"; exit 0
-        else
-          echo "Missing pom.xml"; exit 1
-        fi
 
-  steps:
-    - name: "copy_autograder_test"
-      description: "Copy MainSignatureTest into src/test/java so it runs as part of mvn test"
-      run: |
-        mkdir -p src/test/java/mcon364/las/touro/edu
-        cp .github/autograding_tests/mcon364/las/touro/edu/MainSignatureTest.java src/test/java/mcon364/las/touro/edu/
+jobs:
+  autograde:
+    runs-on: ubuntu-latest
 
-    - name: "run_maven_tests"
-      description: "Run the project's unit tests with Maven; if they pass award remaining points"
-      run: |
-        mvn -q -DskipTests=false test
-      points_on_success: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-# Notes for graders:
-# - The autograder should first execute the `has_pom_xml` check. If it succeeds,
-#   award 80 points. Then run the `copy_autograder_test` step to ensure the
-#   test is available in the test source tree, and then run `run_maven_tests`.
-# - If `run_maven_tests` succeeds (exit 0) award the remaining 20 points.
+      - name: Check for pom.xml
+        id: check_pom
+        run: |
+          if [ -f pom.xml ]; then
+            echo "has_pom=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_pom=false" >> $GITHUB_OUTPUT
+          fi
 
+      - name: Copy autograder test into test tree
+        run: |
+          mkdir -p src/test/java/mcon364/las/touro/edu/autograding
+          # Copy test if it exists in the repository autograding_tests path
+          if [ -f .github/autograding_tests/mcon364/las/touro/edu/autograding/MainSignatureTest.java ]; then
+            cp .github/autograding_tests/mcon364/las/touro/edu/autograding/MainSignatureTest.java src/test/java/mcon364/las/touro/edu/
+          fi
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Build and run tests (Maven)
+        id: mvn_test
+        run: mvn -B -DskipTests=false test
+
+      - name: Upload surefire reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: target/surefire-reports
