@@ -34,6 +34,7 @@ jobs:
           fi
 
       - name: Run autograding tests
+        id: autograder
         uses: education/autograding@v1
 
       - name: Report autograding results
