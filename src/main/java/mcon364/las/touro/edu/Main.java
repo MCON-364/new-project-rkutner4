@@ -35,7 +35,8 @@ public class Main {
         return greeting.toString();
     }
 
-    public static void processValues(List<List<Integer>> data) {
+    public static int processValues(List<List<Integer>> data) {
+        int numsProcessed = 0;
         outerLoop:
         for (int i = 0; i < data.size(); i++) {
             for (int j = 0; j < data.get(i).size(); j++) {
@@ -45,8 +46,10 @@ public class Main {
                 if (data.get(i).get(j) == 99) {
                     break outerLoop;
                 }
+                numsProcessed++;
             }
         }
+        return numsProcessed;
     }
 
 }
