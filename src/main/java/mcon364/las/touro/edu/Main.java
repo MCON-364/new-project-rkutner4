@@ -14,7 +14,7 @@ public class Main {
         var name  = getUserName(envVarName);
         var sb =  new StringBuilder();
         sb.append("Hello ");
-        sb.append(name.orElse("someone"));
+        sb.append(name.orElse("world"));
         return sb.toString();
     }
 
